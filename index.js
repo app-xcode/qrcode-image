@@ -1,5 +1,6 @@
 const express = require('express');
 const QRCode = require('qrcode');
+const sharp = require('sharp');
 
 const app = express();
 
@@ -8,8 +9,8 @@ app.get('/qrcode', async (req, res) => {
     const text = req.query.text || 'hello';
     const size = req.query.size || 300;
     const margin = parseInt(req.query.margin) || 1; // padding
-    const color = req.query.color ? `#`+req.query.color.replace(`#`,``) : '#000000ff';
-    const bg = req.query.bg ?  `#`+req.query.bg : '#ffffffff';
+    const color = req.query.color ? `#` + req.query.color.replace(`#`, ``) : '#000000ff';
+    const bg = req.query.bg ? `#` + req.query.bg : '#ffffffff';
 
     if (!text) {
         return res.status(400).json({
@@ -22,8 +23,61 @@ app.get('/qrcode', async (req, res) => {
         const qrImage = await QRCode.toBuffer(text, {
             width: parseInt(size),
             margin: margin, // ini paddingnya
-            color:{dark:color, light:bg},
+            color: { dark: color, light: bg },
+            errorCorrectionLevel: 'H'
         });
+
+        if (req.query.logo) {
+            const logoUrl = req.query.logo;
+
+            // ambil logo dari URL
+            const response = await fetch(logoUrl);
+            const logoBuffer = await response.arrayBuffer();
+
+            const logoSize = size * 0.2; // 25% dari QR
+
+            // 3. resize logo
+            const resizedLogo = await sharp(Buffer.from(logoBuffer))
+                .resize(logoSize, logoSize)
+                .toBuffer();
+
+            const circleMask = Buffer.from(`
+                <svg width="${logoSize}" height="${logoSize}">
+                    <circle cx="${logoSize / 2}" cy="${logoSize / 2}" r="${logoSize / 2}" fill="${bg}"/>
+                </svg>
+            `);
+
+            const circleLogo = await sharp(resizedLogo)
+                .composite([{ input: circleMask, blend: 'dest-in' }])
+                .png()
+                .toBuffer();
+
+            const bgSize = logoSize + 5;
+
+            const whiteCircle = Buffer.from(`
+                <svg width="${bgSize}" height="${bgSize}">
+                    <circle cx="${bgSize / 2}" cy="${bgSize / 2}" r="${bgSize / 2}" fill="${bg}"/>
+                </svg>
+            `);
+
+            // 4. gabungkan
+            const finalImage = await sharp(qrImage)
+                .composite([
+                    {
+                        input: whiteCircle,
+                        gravity: 'center',
+                    },
+                    {
+                        input: circleLogo,
+                        gravity: 'center'
+                    }
+                ])
+                .png()
+                .toBuffer();
+
+            res.setHeader('Content-Type', 'image/png');
+            return res.send(finalImage);
+        }
 
         res.setHeader('Content-Type', 'image/png');
         res.send(qrImage);
@@ -114,6 +168,12 @@ app.get('/', (req, res) => {
                 <div class="example">
                     <a href="/qrcode?text=Custom Color&color=0004ffff&bg=ffee00ff" target="_blank">
                         Custom warna → /qrcode?text=Custom Color&color=0004ffff&bg=ffee00ff
+                    </a>
+                </div>
+
+                <div class="example">
+                    <a href="/qrcode?text=Custom Logo&logo=https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRPk_xDaJnm3ZL763fRERK4TDGeySaUQqmR6g&s" target="_blank">
+                        Custom warna → /qrcode?text=Custom Logo&logo=https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRPk_xDaJnm3ZL763fRERK4TDGeySaUQqmR6g&s
                     </a>
                 </div>
 
