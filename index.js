@@ -1,8 +1,10 @@
 const express = require('express');
-const QRCode = require('qrcode');
+const cors = require('cors');
 const sharp = require('sharp');
+const QRCode = require('qrcode');
 
 const app = express();
+app.use(cors());
 
 // endpoint utama
 app.get('/qrcode', async (req, res) => {
@@ -76,10 +78,14 @@ app.get('/qrcode', async (req, res) => {
                 .toBuffer();
 
             res.setHeader('Content-Type', 'image/png');
+            res.setHeader('Cache-Control', 'public, max-age=86400, immutable')
+            res.setHeader('Expires', new Date(Date.now() + 86400 * 1000).toUTCString())
             return res.send(finalImage);
         }
 
         res.setHeader('Content-Type', 'image/png');
+        res.setHeader('Cache-Control', 'public, max-age=86400, immutable')
+        res.setHeader('Expires', new Date(Date.now() + 86400 * 1000).toUTCString())
         res.send(qrImage);
 
     } catch (err) {
