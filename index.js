@@ -125,6 +125,7 @@ app.get('/', (req, res) => {
                 }
                 .example {
                     margin-bottom: 10px;
+                    overflow:auto;
                 }
             </style>
         </head>
