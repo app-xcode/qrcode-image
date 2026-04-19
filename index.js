@@ -7,7 +7,8 @@ const app = express();
 app.use(cors());
 
 // endpoint utama
-app.get('/qrcode', async (req, res) => {
+app.get('/:anyPath', async (req, res) => {
+    const fileName = (req.params.anyPath.split('.')[0] || 'qrcode');
     const text = req.query.text || 'hello';
     const size = req.query.size || 300;
     const margin = parseInt(req.query.margin) || 1; // padding
@@ -78,12 +79,14 @@ app.get('/qrcode', async (req, res) => {
                 .toBuffer();
 
             res.setHeader('Content-Type', 'image/png');
+            res.setHeader('Content-Disposition', `inline; filename="${fileName}.png"`);
             res.setHeader('Cache-Control', 'public, max-age=86400, immutable')
             res.setHeader('Expires', new Date(Date.now() + 86400 * 1000).toUTCString())
             return res.send(finalImage);
         }
 
         res.setHeader('Content-Type', 'image/png');
+        res.setHeader('Content-Disposition', `inline; filename="${fileName}.png"`);
         res.setHeader('Cache-Control', 'public, max-age=86400, immutable')
         res.setHeader('Expires', new Date(Date.now() + 86400 * 1000).toUTCString())
         res.send(qrImage);
@@ -94,6 +97,7 @@ app.get('/qrcode', async (req, res) => {
         });
     }
 });
+
 
 app.get('/', (req, res) => {
     res.send(`
@@ -140,8 +144,8 @@ app.get('/', (req, res) => {
                 <h1>🚀 QR Code API</h1>
                 <p>API sederhana untuk generate QR Code dalam bentuk gambar (PNG).</p>
 
-                <h2>📌 Endpoint</h2>
-                <code>/qrcode?text=ISI_TEXT</code>
+                <h2>📌 Endpoint bebas  bisa untuk nama gambar</h2>
+                <code>/NamaGambar.png?text=ISI_TEXT</code>
 
                 <h2>⚙️ Parameter</h2>
                 <ul>
@@ -155,32 +159,32 @@ app.get('/', (req, res) => {
                 <h2>🔗 Contoh</h2>
 
                 <div class="example">
-                    <a href="/qrcode?text=HelloWorld" target="_blank">
-                        Basic QR → /qrcode?text=HelloWorld
+                    <a href="/HelloWorld.png?text=HelloWorld" target="_blank">
+                        Basic QR → /HelloWorld.png?text=HelloWorld
                     </a>
                 </div>
 
                 <div class="example">
-                    <a href="/qrcode?text=Halo Dunia&size=400" target="_blank">
-                        Dengan ukuran → /qrcode?text=Halo Dunia&size=400
+                    <a href="/HaloDunia.png?text=Halo Dunia&size=400" target="_blank">
+                        Dengan ukuran → /HaloDunia.png?text=Halo Dunia&size=400
                     </a>
                 </div>
 
                 <div class="example">
-                    <a href="/qrcode?text=Custom Margin&margin=6" target="_blank">
-                        Dengan padding → /qrcode?text=Custom Margin&margin=6
+                    <a href="/HaloDunia.png?text=Custom Margin&margin=6" target="_blank">
+                        Dengan padding → /HaloDunia.png?text=Custom Margin&margin=6
                     </a>
                 </div>
 
                 <div class="example">
-                    <a href="/qrcode?text=Custom Color&color=0004ffff&bg=ffee00ff" target="_blank">
-                        Custom warna → /qrcode?text=Custom Color&color=0004ffff&bg=ffee00ff
+                    <a href="/HaloDunia.png?text=Custom Color&color=0004ffff&bg=ffee00ff" target="_blank">
+                        Custom warna → /HaloDunia.png?text=Custom Color&color=0004ffff&bg=ffee00ff
                     </a>
                 </div>
 
                 <div class="example">
-                    <a href="/qrcode?text=Custom Logo&logo=https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRPk_xDaJnm3ZL763fRERK4TDGeySaUQqmR6g&s" target="_blank">
-                        Custom warna → /qrcode?text=Custom Logo&logo=https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRPk_xDaJnm3ZL763fRERK4TDGeySaUQqmR6g&s
+                    <a href="/Qr-Logo.png?text=Custom Logo&logo=https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRPk_xDaJnm3ZL763fRERK4TDGeySaUQqmR6g&s" target="_blank">
+                        Custom warna → /Qr-Logo.png?text=Custom Logo&logo=https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRPk_xDaJnm3ZL763fRERK4TDGeySaUQqmR6g&s
                     </a>
                 </div>
 
